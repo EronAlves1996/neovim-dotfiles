@@ -177,6 +177,9 @@ lsp.on_attach(function(client, bufnr)
   vim.keymap.set('n', "<space>ca", function()
     vim.lsp.buf.code_action()
   end)
+  vim.keymap.set('v', "<space>ca", function()
+    vim.lsp.buf.code_action()
+  end)
 end)
 
 lsp.setup_servers({ 'lua_ls', "tsserver", "cssls", "html", "tailwindcss" })
@@ -253,26 +256,7 @@ null_ls.setup({
   end,
   sources = {
     null_ls.builtins.diagnostics.eslint_d,
-    null_ls.builtins.code_actions.eslint_d
+    null_ls.builtins.code_actions.eslint_d,
+    null_ls.builtins.formatting.prettierd
   }
-})
-
-local prettier = require("prettier")
-
-prettier.setup({
-  bin = 'prettierd', -- or `'prettierd'` (v0.23.3+)
-  filetypes = {
-    "css",
-    "graphql",
-    "html",
-    "javascript",
-    "javascriptreact",
-    "json",
-    "less",
-    "markdown",
-    "scss",
-    "typescript",
-    "typescriptreact",
-    "yaml",
-  },
 })
