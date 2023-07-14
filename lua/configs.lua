@@ -1,6 +1,9 @@
 -- identation
 vim.cmd([[ set autoindent expandtab tabstop=2 shiftwidth=2 ]])
 
+-- identation for php filesize
+vim.cmd([[ autocmd FileType php setlocal autoindent ]])
+
 -- linenumber
 vim.cmd([[ set number ]])
 
@@ -12,24 +15,11 @@ vim.cmd([[ set cc=80 ]])
 vim.cmd([[ set termguicolors ]])
 vim.cmd([[ colorscheme molokai  ]])
 
--- terminal
-vim.api.nvim_create_user_command("Term",
-  function(options)
-    local args = options.args
-    if not (args == '') then
-      vim.cmd("wincmd w")
-    end
-    vim.cmd("split")
-    vim.cmd("wincmd j")
-    vim.cmd("resize 10")
+-- terminal (:LocalTerm)
+vim.cmd([[command! LocalTerm let s:term_dir=expand('%:p:h') | below new | call termopen([&shell], {'cwd': s:term_dir })
+]])
 
-    if args == '' then
-      vim.cmd("terminal")
-      return
-    end
 
-    vim.cmd("terminal zsh -c \"cd " .. args .. ";zsh\"")
-  end, { nargs = '?' })
 -- tabs
 vim.keymap.set("n", "<space>t", ":tab new<CR>")
 vim.keymap.set("n", "tp", ":tabprevious<CR>")
@@ -180,15 +170,8 @@ git.setup({
   }
 })
 
--- nvim tree
-require("nvim-tree").setup({
-  filters = {
-    custom = {},
-    exclude = { "node_modules" }
-  }
-})
-
-vim.keymap.set('n', 'nt', ':NvimTreeToggle<CR>')
+-- newtr
+vim.keymap.set('n', 'nt', ':Explore<CR>')
 
 --lsp
 
@@ -198,15 +181,13 @@ local protocol = require('vim.lsp.protocol')
 -- format on save
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', "v:lua.vim.lsp.omnifunc")
-  if client.supports_method("textDocument/formatting") then
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = vim.api.nvim_create_augroup('Format', { clear = true }),
-      buffer = bufnr,
-      callback = function()
-        vim.lsp.buf.format()
-      end
-    })
-  end
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = vim.api.nvim_create_augroup('Format', { clear = true }),
+    buffer = bufnr,
+    callback = function()
+      vim.lsp.buf.format()
+    end
+  })
   local bufopts = { noremap = true, silent = true, buffer = bufnr }
   local opts = { noremap = true, silent = true }
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
@@ -226,11 +207,16 @@ local on_attach = function(client, bufnr)
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
-capabilities.workspace = {}
-capabilities.workspace.didChangeWatchedFiles = {}
-capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+capabilities.workspace = {
+  didChangeWatchedFiles = {
+    dynamicRegistration = true
+  },
+  didChangeConfiguration = {
+    dynamicRegistration = true
+  }
+}
 
-local language_servers = { 'tsserver', 'tailwindcss', 'cssls', 'html', 'phpactor', 'volar' }
+local language_servers = { 'tsserver', 'tailwindcss', 'cssls', 'html', 'phpactor', 'volar', 'eslint', 'gopls' }
 
 for key, value in pairs(language_servers) do
   lspconfig[value].setup {
@@ -238,6 +224,12 @@ for key, value in pairs(language_servers) do
     capabilities = capabilities
   }
 end
+
+lspconfig.html.setup {
+  on_attach = on_attach,
+  capabilities = capabilities,
+  filetypes = { "html", "template" }
+}
 
 
 lspconfig.lua_ls.setup {
@@ -256,6 +248,42 @@ lspconfig.lua_ls.setup {
   }
 }
 
+
+-- efm-sources
+local prettier = {
+  formatCommand = 'prettierd ${INPUT}',
+  formatStdin = true,
+}
+
+local phpcs = {
+  lintCommand =
+  "phpcs --report=emacs -q -s --runtime-set ignore_warnings_on_ext 1 --runtime-set ignore_errors_on_ext 1 --stdin-path=${INPUT} --standard=PSR12",
+  lintStdin = true,
+  lintFormats = { "%f:%l:%c: %m" },
+  lintIgnoreExitCode = true,
+  formatcommand = "phpcbf -q --stdin-path=${INPUT} --standard=PSR12 -",
+  formatStdin = true,
+}
+
+lspconfig.efm.setup {
+  init_options = { documentFormatting = true },
+  filetypes = { "typescript", "php", "vue", "template", "typescriptreact" },
+  settings = {
+    rootMarkers = { "tsconfig.json", "composer.json", ".git/" },
+    languages = {
+      typescript = { prettier },
+      typescriptreact = { prettier },
+      javascript = { prettier },
+      vue = { prettier },
+      php = { prettier, phpcs },
+      template = { prettier },
+    }
+  },
+  capabilities = capabilities,
+  on_attach = on_attach
+}
+
+-- cmp
 local cmp = require 'cmp';
 local lspkind = require 'lspkind'
 
@@ -292,49 +320,48 @@ vim.cmd [[ set completeopt=menuone,noinsert,noselect
 highlight! default link CmpItemKind CmpItemMenuDefault
 ]]
 
--- prettier
-local null_ls = require("null-ls")
+-- null_ls
 
 local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false })
 local event = "BufWritePre" -- or "BufWritePost"
 local async = event == "BufWritePost"
 
-null_ls.setup({
-  on_attach = function(client, bufnr)
-    if client.supports_method("textDocument/formatting") then
-      vim.keymap.set("n", "<Leader>f", function()
-        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
-      end, { buffer = bufnr, desc = "[lsp] format" })
-
-      -- format on save
-      vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
-      vim.api.nvim_create_autocmd(event, {
-        buffer = bufnr,
-        group = group,
-        callback = function()
-          vim.lsp.buf.format({ bufnr = bufnr, async = async })
-        end,
-        desc = "[lsp] format on save",
-      })
-    end
-
-    if client.supports_method("textDocument/rangeFormatting") then
-      vim.keymap.set("x", "<Leader>f", function()
-        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
-      end, { buffer = bufnr, desc = "[lsp] format" })
-    end
-  end,
-  sources = {
-    null_ls.builtins.diagnostics.eslint_d,
-    null_ls.builtins.code_actions.eslint_d,
-    null_ls.builtins.formatting.prettierd.with({
-      extra_filetypes = { "php" }
-    }),
-    null_ls.builtins.diagnostics.phpcs.with({
-      extra_args = { "--standard=PSR12" }
-    })
-  }
-})
+--null_ls.setup {
+--  on_attach = function(client, bufnr)
+--    if client.supports_method("textDocument/formatting") then
+--      vim.keymap.set("n", "<Leader>f", function()
+--        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
+--      end, { buffer = bufnr, desc = "[lsp] format" })
+--
+--      -- format on save
+--      vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
+--      vim.api.nvim_create_autocmd(event, {
+--        buffer = bufnr,
+--        group = group,
+--        callback = function()
+--          vim.lsp.buf.format({ bufnr = bufnr, async = async })
+--        end,
+--        desc = "[lsp] format on save",
+--      })
+--    end
+--
+--    if client.supports_method("textDocument/rangeFormatting") then
+--      vim.keymap.set("x", "<Leader>f", function()
+--        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
+--      end, { buffer = bufnr, desc = "[lsp] format" })
+--    end
+--  end,
+--  sources = {
+--    null_ls.builtins.diagnostics.eslint,
+--    null_ls.builtins.code_actions.eslint,
+--    null_ls.builtins.formatting.prettier.with({
+--      extra_filetypes = { "php" }
+--    }),
+--    null_ls.builtins.diagnostics.phpcs.with({
+--      extra_args = { "--standard=PSR12" }
+--    })
+--  }
+--}
 
 -- treesitter
 require 'nvim-treesitter.configs'.setup {
