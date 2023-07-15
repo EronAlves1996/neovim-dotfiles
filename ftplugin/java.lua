@@ -80,50 +80,56 @@ local config = {
   root_dir = require("jdtls.setup").find_root({ 'gradlew', '.git', 'mvnw' }),
   on_attach = on_attach,
   capabilities = capabilities,
+  on_init = function(client, _)
+    client.notify('workspace/didChangeConfiguration', { settings = config.settings })
+  end,
   settings = {
-    signatureHelp = { enabled = true },
-    contentProvider = { preferred = 'fernflower' },
-    completion = {
-      favoriteStaticMembers = {
-        "org.hamcrest.MatcherAssert.assertThat",
-        "org.hamcrest.Matchers.*",
-        "org.hamcrest.CoreMatchers.*",
-        "org.junit.jupiter.api.Assertions.*",
-        "java.util.Objects.requireNonNull",
-        "java.util.Objects.requireNonNullElse",
-        "org.mockito.Mockito.*"
-      },
-      filteredTypes = {
-        "com.sun.*",
-        "io.micrometer.shaded.*",
-        "java.awt.*",
-        "jdk.*",
-        "sun.*",
-      },
-    },
-    sources = {
-      organizeImports = {
-        starThreshold = 9999,
-        staticStarThreshold = 9999,
-      },
-    },
-    codeGeneration = {
-      toString = {
-        template = "${object.className}{${member.name()}=${member.value}, ${otherMembers}}"
-      },
-      hashCodeEquals = {
-        useJava7Objects = true,
-      },
-      useBlocks = true,
-    },
-    configuration = {
-      runtimes = {
-        {
-          name = "JavaSE-17",
-          path = "/home/eronads/.sdkman/candidates/java/17.0.7-tem/",
-          default = true
+    java = {
+      signatureHelp = { enabled = true },
+      contentProvider = { preferred = 'fernflower' },
+      completion = {
+        favoriteStaticMembers = {
+          "org.hamcrest.MatcherAssert.assertThat",
+          "org.springframework.security.config.Customizer.withDefaults",
+          "org.hamcrest.Matchers.*",
+          "org.hamcrest.CoreMatchers.*",
+          "org.junit.jupiter.api.Assertions.*",
+          "java.util.Objects.requireNonNull",
+          "java.util.Objects.requireNonNullElse",
+          "org.mockito.Mockito.*",
         },
-      }
+        filteredTypes = {
+          "com.sun.*",
+          "io.micrometer.shaded.*",
+          "java.awt.*",
+          "jdk.*",
+          "sun.*",
+        },
+      },
+      sources = {
+        organizeImports = {
+          starThreshold = 9999,
+          staticStarThreshold = 9999,
+        },
+      },
+      codeGeneration = {
+        toString = {
+          template = "${object.className}1{${member.name()}=${member.value}, ${otherMembers}}"
+        },
+        hashCodeEquals = {
+          useJava7Objects = true,
+        },
+        useBlocks = true,
+      },
+      configuration = {
+        runtimes = {
+          {
+            name = "JavaSE-17",
+            path = "/home/eronads/.sdkman/candidates/java/17.0.7-tem/",
+            default = true
+          },
+        }
+      },
     },
   },
 }
