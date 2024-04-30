@@ -25,6 +25,9 @@ vim.keymap.set("n", "<space>t", ":tab new<CR>")
 vim.keymap.set("n", "tp", ":tabprevious<CR>")
 vim.keymap.set("n", "tn", ":tabnext<CR>")
 
+-- wrap
+vim.cmd([[ set nowrap ]])
+
 -- lualine
 local status, lualine = pcall(require, "lualine")
 if (not status) then return end
