@@ -43,4 +43,5 @@ packer.startup(function(use)
   use 'mattn/emmet-vim'
   use 'RRethy/nvim-base16'
   use 'mfussenegger/nvim-jdtls'
+  use 'mechatroner/rainbow_csv'
 end)
