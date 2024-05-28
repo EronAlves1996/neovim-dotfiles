@@ -52,7 +52,7 @@ local on_attach = function(client, bufnr)
 end
 
 local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
-local workspace_dir = "/home/eron/workspaces/" .. project_name
+local workspace_dir = "/home/letwe/workspaces/" .. project_name
 
 local config = {
   flags = {
@@ -60,27 +60,28 @@ local config = {
   },
   cmd = {
     -- 💀
-    '/home/eron/jdtls/bin/jdtls', -- or '/path/to/java17_or_newer/bin/java'
+    -- '/home/letwe/jdtls/bin/jdtls', -- or 
+    '/home/letwe/.sdkman/candidates/java/17.0.9-graalce/bin/java',
     -- depends on if `java` is in your $PATH env variable and if it points to the right version.
 
-    --'-Declipse.application=org.eclipse.jdt.ls.core.id1',
-    --'-Dosgi.bundles.defaultStartLevel=4',
-    --'-Declipse.product=org.eclipse.jdt.ls.core.product',
-    --'-Dlog.protocol=true',
-    --'-Dlog.level=ALL',
-    --'-Xms1G',
-    --'--add-modules=ALL-SYSTEM',
-    --'--add-opens', 'java.base/java.util=ALL-UNNAMED',
-    --'--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+    '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+    '-Dosgi.bundles.defaultStartLevel=4',
+    '-Declipse.product=org.eclipse.jdt.ls.core.product',
+    '-Dlog.protocol=true',
+    '-Dlog.level=ALL',
+    '-Xms1G',
+    '--add-modules=ALL-SYSTEM',
+    '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+    '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
 
     -- 💀
-    --'-jar', '/home/eronads/jdtls/plugins/org.eclipse.equinox.launcher_1.6.500.v20230622-2056.jar',
+    '-jar', '/home/letwe/jdtls/plugins/org.eclipse.equinox.launcher_1.6.700.v20231214-2017.jar',
     -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^
     -- Must point to the                                                     Change this to
     -- eclipse.jdt.ls installation                                           the actual version
 
 
-    '-configuration', '/home/eron/jdtls/config_linux',
+    '-configuration', '/home/letwe/jdtls/config_linux',
 
     -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^
     -- Must point to the                      Change to one of `linux`, `win` or `mac`
@@ -145,19 +146,25 @@ local config = {
         runtimes = {
           {
             name = "JavaSE-17",
-            path = "/home/eron/.sdkman/candidates/java/17.0.8.1-tem",
-            default = true
+            path = "/home/letwe/.sdkman/candidates/java/17.0.9-graalce",
           },
           {
             name = "JavaSE-1.8",
-            path = "/home/eron/.sdkman/candidates/java/8.0.392-librca"
+            path = "/home/letwe/.sdkman/candidates/java/8.0.282-trava",
+            default = true
+          },
+          {
+            name = "JavaSE-1.7",
+            path = "/home/letwe/.sdkman/candidates/java/7.0.352-zulu"
           }
         }
       },
       import = {
+        enabled = true,
         gradle = {
+          enabled = true,
           java = {
-            home = "/home/eron/.sdkman/candidates/java/8.0.392-librca"
+            home = "/home/letwe/.sdkman/candidates/java/8.0.282-trava"
           }
         }
       }
