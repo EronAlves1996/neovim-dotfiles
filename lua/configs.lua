@@ -13,7 +13,7 @@ vim.cmd([[ set cc=80 ]])
 -- colorscheme
 
 vim.cmd([[ set termguicolors ]])
-vim.cmd([[ colorscheme molokai  ]])
+vim.cmd([[ colorscheme base16-hardcore ]])
 
 -- terminal (:LocalTerm)
 vim.cmd([[command! LocalTerm let s:term_dir=expand('%:p:h') | below new | call termopen([&shell], {'cwd': s:term_dir })
@@ -50,11 +50,13 @@ autopairs.setup({
   disable_filetype = { "TelescopePrompt", "vim" },
 })
 
+
+
 -- Telescope
-local status, telescope = pcall(require, "telescope")
-if (not status) then return end
+local telescope = require("telescope")
 local actions = require('telescope.actions')
 local builtin = require("telescope.builtin")
+
 
 local function telescope_buffer_dir()
   return vim.fn.expand('%:p:h')
@@ -76,6 +78,13 @@ telescope.setup {
         n = {
           ["d"] = actions.delete_buffer
         }
+      }
+    }
+  },
+  extensions = {
+    aerial = {
+      show_nesting = {
+        ["_"] = false,
       }
     }
   }
@@ -185,10 +194,23 @@ local protocol = require('vim.lsp.protocol')
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', "v:lua.vim.lsp.omnifunc")
   vim.api.nvim_create_autocmd("BufWritePre", {
-    group = vim.api.nvim_create_augroup('Format', { clear = true }),
+    group = vim.api.nvim_create_augroup('Format', { clear = false }),
     buffer = bufnr,
     callback = function()
-      vim.lsp.buf.format()
+      vim.lsp.buf.format {
+        filter = function(client)
+          return client.name ~= "tsserver"
+        end
+      }
+    end
+  })
+  vim.api.nvim_create_autocmd("BufDelete", {
+    buffer = bufnr,
+    callback = function()
+      vim.api.nvim_clear_autocmds({
+        buffer = bufnr,
+        group = "Format"
+      })
     end
   })
   local bufopts = { noremap = true, silent = true, buffer = bufnr }
@@ -203,6 +225,7 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+  vim.keymap.set('v', '<space>ca', vim.lsp.buf.code_action, bufopts)
   vim.keymap.set('n', '<space>f', vim.lsp.buf.format, bufopts)
   vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
@@ -219,7 +242,7 @@ capabilities.workspace = {
   }
 }
 
-local language_servers = { 'tsserver', 'tailwindcss', 'cssls', 'html', 'phpactor', 'volar', 'eslint', 'gopls' }
+local language_servers = { 'tailwindcss', 'cssls', 'html', 'phpactor', 'eslint', 'gopls', 'rust_analyzer', 'ocamllsp' }
 
 for key, value in pairs(language_servers) do
   lspconfig[value].setup {
@@ -228,12 +251,42 @@ for key, value in pairs(language_servers) do
   }
 end
 
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = "@vue/typescript-plugin",
+        location = "/home/eron/.nvm/versions/node/v18.18.0/lib/node_modules/@vue/typescript-plugin",
+        languages = {"javascript", "typescript", "vue"},
+      },
+    },
+  },
+  on_attach = on_attach,
+  capabilities = capabilities,
+  filetypes = { "javascript", "typescript", "vue" },
+}
+
+lspconfig.volar.setup {
+  init_options = {
+    typescript = {
+      tsdk = "/home/eron/.nvm/versions/node/v18.18.0/lib/node_modules/typescript/lib" 
+    }
+  },
+  on_attach = on_attach,
+  capabilities = capabilities
+}
+
 lspconfig.html.setup {
   on_attach = on_attach,
   capabilities = capabilities,
-  filetypes = { "html", "template" }
+  filetypes = { "html", "template", "xhtml" }
 }
 
+lspconfig.lemminx.setup {
+  on_attach = on_attach,
+  capabilities = capabilities,
+  filetypes = { "xml", "xhtml" } 
+}
 
 lspconfig.lua_ls.setup {
   on_attach = on_attach,
@@ -270,7 +323,7 @@ local phpcs = {
 
 lspconfig.efm.setup {
   init_options = { documentFormatting = true },
-  filetypes = { "typescript", "php", "vue", "template", "typescriptreact" },
+  filetypes = { "typescript", "php", "template", "typescriptreact", "vue" },
   settings = {
     rootMarkers = { "tsconfig.json", "composer.json", ".git/" },
     languages = {
@@ -278,7 +331,7 @@ lspconfig.efm.setup {
       typescriptreact = { prettier },
       javascript = { prettier },
       vue = { prettier },
-      php = { prettier, phpcs },
+      php = { prettier },
       template = { prettier },
     }
   },
@@ -323,48 +376,6 @@ vim.cmd [[ set completeopt=menuone,noinsert,noselect
 highlight! default link CmpItemKind CmpItemMenuDefault
 ]]
 
--- null_ls
-
-local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false })
-local event = "BufWritePre" -- or "BufWritePost"
-local async = event == "BufWritePost"
-
---null_ls.setup {
---  on_attach = function(client, bufnr)
---    if client.supports_method("textDocument/formatting") then
---      vim.keymap.set("n", "<Leader>f", function()
---        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
---      end, { buffer = bufnr, desc = "[lsp] format" })
---
---      -- format on save
---      vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
---      vim.api.nvim_create_autocmd(event, {
---        buffer = bufnr,
---        group = group,
---        callback = function()
---          vim.lsp.buf.format({ bufnr = bufnr, async = async })
---        end,
---        desc = "[lsp] format on save",
---      })
---    end
---
---    if client.supports_method("textDocument/rangeFormatting") then
---      vim.keymap.set("x", "<Leader>f", function()
---        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
---      end, { buffer = bufnr, desc = "[lsp] format" })
---    end
---  end,
---  sources = {
---    null_ls.builtins.diagnostics.eslint,
---    null_ls.builtins.code_actions.eslint,
---    null_ls.builtins.formatting.prettier.with({
---      extra_filetypes = { "php" }
---    }),
---    null_ls.builtins.diagnostics.phpcs.with({
---      extra_args = { "--standard=PSR12" }
---    })
---  }
---}
 
 -- treesitter
 require 'nvim-treesitter.configs'.setup {
@@ -372,3 +383,10 @@ require 'nvim-treesitter.configs'.setup {
     enable = true
   }
 }
+
+
+-- aerial (outline)
+require 'aerial'.setup {}
+
+telescope.load_extension("aerial")
+--telescope.extensions.aerial.aerial()

@@ -15,22 +15,12 @@ packer.startup(function(use)
   use 'windwp/nvim-autopairs'
   use 'kyazdani42/nvim-web-devicons'
   use {
-    'nvim-telescope/telescope.nvim', tag = '0.1.5',
-    -- or                            , branch = '0.1.x',
+    'nvim-telescope/telescope.nvim',
     requires = { { 'nvim-lua/plenary.nvim' } }
   }
   use 'nvim-telescope/telescope-file-browser.nvim'
   use 'lewis6991/gitsigns.nvim'
   use 'dinhhuy258/git.nvim'
-  use {
-    'rmagatti/auto-session',
-    config = function()
-      require("auto-session").setup {
-        log_level = "error",
-        auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
-      }
-    end
-  }
   --  use 'nvim-tree/nvim-tree.lua'
   use 'jparise/vim-graphql'
   use 'neovim/nvim-lspconfig'
@@ -44,4 +34,5 @@ packer.startup(function(use)
   use 'RRethy/nvim-base16'
   use 'mfussenegger/nvim-jdtls'
   use 'mechatroner/rainbow_csv'
+  use 'stevearc/aerial.nvim'
 end)

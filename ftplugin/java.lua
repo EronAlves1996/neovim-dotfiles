@@ -17,10 +17,19 @@ vim.cmd(
 local on_attach = function(client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', "v:lua.vim.lsp.omnifunc")
   vim.api.nvim_create_autocmd("BufWritePre", {
-    group = vim.api.nvim_create_augroup('Format', { clear = true }),
+    group = vim.api.nvim_create_augroup('Format', { clear = false }),
     buffer = bufnr,
     callback = function()
       vim.lsp.buf.format()
+    end
+  })
+  vim.api.nvim_create_autocmd("BufDelete", {
+    buffer = bufnr,
+    callback = function()
+      vim.api.nvim_clear_autocmds({
+        buffer = bufnr,
+        group = "Format"
+      })
     end
   })
   local bufopts = { noremap = true, silent = true, buffer = bufnr }
@@ -35,6 +44,7 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
   vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
+  vim.keymap.set('v', '<space>ca', vim.lsp.buf.code_action, bufopts)
   vim.keymap.set('n', '<space>f', vim.lsp.buf.format, bufopts)
   vim.keymap.set('n', '<space>e', vim.diagnostic.open_float, opts)
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
@@ -42,7 +52,7 @@ local on_attach = function(client, bufnr)
 end
 
 local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
-local workspace_dir = "/home/eronads/workspaces/" .. project_name
+local workspace_dir = "/home/eron/workspaces/" .. project_name
 
 local config = {
   flags = {
@@ -50,7 +60,7 @@ local config = {
   },
   cmd = {
     -- 💀
-    '/home/eronads/jdtls/bin/jdtls', -- or '/path/to/java17_or_newer/bin/java'
+    '/home/eron/jdtls/bin/jdtls', -- or '/path/to/java17_or_newer/bin/java'
     -- depends on if `java` is in your $PATH env variable and if it points to the right version.
 
     --'-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -70,7 +80,7 @@ local config = {
     -- eclipse.jdt.ls installation                                           the actual version
 
 
-    '-configuration', '/home/eronads/jdtls/config_linux',
+    '-configuration', '/home/eron/jdtls/config_linux',
 
     -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^
     -- Must point to the                      Change to one of `linux`, `win` or `mac`
@@ -85,6 +95,11 @@ local config = {
   end,
   settings = {
     java = {
+      format = {
+        settings = {
+          url = '/home/eron/.config/nvim/ftplugin/eclipse-formatter.xml'
+        }
+      },
       signatureHelp = { enabled = true },
       contentProvider = { preferred = 'fernflower' },
       completion = {
@@ -125,11 +140,22 @@ local config = {
         runtimes = {
           {
             name = "JavaSE-17",
-            path = "/home/eronads/.sdkman/candidates/java/17.0.7-tem/",
+            path = "/home/eron/.sdkman/candidates/java/17.0.8.1-tem",
             default = true
           },
+          {
+            name = "JavaSE-1.8",
+            path = "/home/eron/.sdkman/candidates/java/8.0.392-librca"
+          }
         }
       },
+      import = {
+        gradle = {
+          java = {
+            home = "/home/eron/.sdkman/candidates/java/8.0.392-librca"
+          }
+        }
+      }
     },
   },
 }
