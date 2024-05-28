@@ -93,6 +93,11 @@ local config = {
   on_init = function(client, _)
     client.notify('workspace/didChangeConfiguration', { settings = config.settings })
   end,
+  init_options = {
+    bundles = {
+      vim.fn.glob("/home/eron/.config/nvim/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar", 1)
+    };
+  },
   settings = {
     java = {
       format = {
