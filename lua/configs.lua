@@ -185,6 +185,9 @@ git.setup({
 -- newtr
 vim.keymap.set('n', 'nt', ':Explore<CR>')
 
+-- neoconf 
+require"neoconf".setup{}
+
 --lsp
 
 local lspconfig = require('lspconfig')

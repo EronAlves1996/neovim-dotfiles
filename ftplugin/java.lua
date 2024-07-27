@@ -1,5 +1,6 @@
 local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
 
+
 capabilities.workspace = {
   configuration = true,
   didChangeWatchedFiles = {
@@ -91,19 +92,23 @@ local config = {
   root_dir = require("jdtls.setup").find_root({ 'gradlew', '.git', 'mvnw' }),
   on_attach = on_attach,
   capabilities = capabilities,
-  on_init = function(client, _)
-    client.notify('workspace/didChangeConfiguration', { settings = config.settings })
-  end,
   init_options = {
     bundles = {
-      vim.fn.glob("/home/eron/.config/nvim/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar", 1)
+      vim.fn.glob("/home/letwe/.config/nvim/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar", 1)
     };
   },
   settings = {
     java = {
+      import = {
+        gradle = {
+          user = {
+            home = '/home/letwe/temp/gradle'
+          }
+        }
+      },
       format = {
         settings = {
-          url = '/home/eron/.config/nvim/ftplugin/eclipse-formatter.xml'
+          url = '/home/letwe/.config/nvim/ftplugin/eclipse-formatter.xml'
         }
       },
       signatureHelp = { enabled = true },
@@ -151,7 +156,6 @@ local config = {
           {
             name = "JavaSE-1.8",
             path = "/home/letwe/.sdkman/candidates/java/8.0.282-trava",
-            default = true
           },
           {
             name = "JavaSE-1.7",
@@ -159,19 +163,25 @@ local config = {
           }
         }
       },
-      import = {
-        enabled = true,
-        gradle = {
-          enabled = true,
-          java = {
-            home = "/home/letwe/.sdkman/candidates/java/8.0.282-trava"
-          }
-        }
-      }
     },
   },
 }
 
+config.on_init =  function(client, _)
+    client.notify('workspace/didChangeConfiguration', { settings = config.settings })
+  end
+
+-- Debugger config for quarkus 
+local dap = require('dap')
+dap.configurations.java = {
+  {
+    type = 'java';
+    request = 'attach';
+    name = "Quarkus - Remote";
+    hostName = "127.0.0.1";
+    port = 5005;
+  }
+}
 
 local cmp = require 'cmp';
 local lspkind = require 'lspkind'
@@ -204,6 +214,5 @@ cmp.setup({
     })
   }
 })
-
 
 require('jdtls').start_or_attach(config)

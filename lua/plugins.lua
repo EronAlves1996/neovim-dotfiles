@@ -36,4 +36,5 @@ packer.startup(function(use)
   use 'mechatroner/rainbow_csv'
   use 'stevearc/aerial.nvim'
   use 'mfussenegger/nvim-dap'
+  use 'folke/neoconf.nvim'
 end)
